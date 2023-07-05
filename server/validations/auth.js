@@ -1,8 +1,8 @@
 import { body } from 'express-validator';
 
 export const registerValidation = [
-  body('email').isEmail(),
-  body('password').isLength({ min: 5 }),
+  body('email', 'Invalid email').isEmail(),
+  body('password', 'Password must be greater than 5 letters').isLength({ min: 5 }),
   body('fullName').isLength({ min: 3 }),
   body('avatarUrl').optional().isURL(),
 ];
