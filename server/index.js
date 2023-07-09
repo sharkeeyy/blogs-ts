@@ -1,11 +1,13 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
-import { registerValidation } from './validations/auth.js';
-import { validationResult } from 'express-validator';
-import UserModel from './models/User.js';
+import multer from 'multer';
+import { loginValidation, registerValidation } from './validations/auth.js';
+import { postCreateValidation } from './validations/post.js';
 import checkAuth from './utils/checkAuth.js';
+import { getMe, login, register } from './controllers/UserController.js';
+import { createPost, getAll, getOne, removePost, updatePost } from './controllers/PostController.js';
+
+const PORT = 3000;
 
 mongoose
   .connect(
@@ -14,72 +16,33 @@ mongoose
   .then(() => console.log('DB OK'))
   .catch((err) => console.log(err));
 
-const PORT = 3000;
-
 const app = express();
+const storage = multer.diskStorage({
+  destination: (_, __, cb) => {
+    cb(null, 'uploads');
+  },
+  filename: (_, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({ storage });
 
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
-app.post('/auth/login', async (req, res) => {
-  try {
-    const user = await UserModel.findOne({ email: req.body.email });
+app.post('/auth/login', loginValidation, login);
+app.post('/auth/register', registerValidation, register);
+app.get('/auth/me', checkAuth, getMe);
 
-    if (!user) {
-      return res.status(404).json({ message: 'No current user'});
-    }
-
-    const isPasswordValid = await bcrypt.compare(req.body.password, user._doc.passwordHash);
-
-    if (!isPasswordValid) {
-      return res.status(404).json({ message: 'Invalid login or password'});
-    }
-
-    const token = jwt.sign({ _id: user._id, }, 'secretKey123', { expiresIn: '30d' });
-    const { passwordHash, ...userData } = user._doc;
-
-    res.json({ ...userData, token });
-  } catch (e) {
-    console.log(e);
-    res.status(500).json({ message: 'Authorization failed'});
-  }
+app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
+  res.json({ url: `/uploads/${req.file.originalname}`});
 });
 
-app.post('/auth/register', registerValidation, async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json(errors.array());
-    }
-
-    const { email, fullName, avatarUrl, password } = req.body;
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, salt);
-
-    const doc = new UserModel({
-      email,
-      fullName,
-      passwordHash: hash,
-      avatarUrl,
-    });
-
-    const user = await doc.save();
-    const token = jwt.sign({ _id: user._id, }, 'secretKey123', { expiresIn: '30d' });
-    const { passwordHash, ...userData } = user._doc;
-
-    res.json({ ...userData, token });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: 'Registration failed'});
-  }
-});
-
-app.get('/auth/me', checkAuth, (req, res) => {
-  try {
-
-  } catch (e) {
-
-  }
-});
+app.get('/posts', getAll);
+app.get('/posts/:id', getOne);
+app.post('/posts', checkAuth, postCreateValidation, createPost);
+app.delete('/posts/:id', checkAuth, removePost);
+app.patch('/posts/:id', checkAuth, updatePost);
 
 app.listen(PORT, () => {
   console.log('Server OK');
