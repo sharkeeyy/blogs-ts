@@ -3,9 +3,8 @@ import mongoose from 'mongoose';
 import multer from 'multer';
 import { loginValidation, registerValidation } from './validations/auth.js';
 import { postCreateValidation } from './validations/post.js';
-import checkAuth from './utils/checkAuth.js';
-import { getMe, login, register } from './controllers/UserController.js';
-import { createPost, getAll, getOne, removePost, updatePost } from './controllers/PostController.js';
+import { UserController, PostController } from './controllers/index.js';
+import { checkAuth, handleValidationErrors } from './utils/index.js';
 
 const PORT = 3000;
 
@@ -30,19 +29,25 @@ const upload = multer({ storage });
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
-app.post('/auth/login', loginValidation, login);
-app.post('/auth/register', registerValidation, register);
-app.get('/auth/me', checkAuth, getMe);
+app.post('/auth/login', loginValidation, handleValidationErrors, UserController.login);
+app.post('/auth/register', registerValidation, handleValidationErrors, UserController.register);
+app.get('/auth/me', checkAuth, UserController.getMe);
 
 app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
-  res.json({ url: `/uploads/${req.file.originalname}`});
+  res.json({ url: `/uploads/${req.file.originalname}` });
 });
 
-app.get('/posts', getAll);
-app.get('/posts/:id', getOne);
-app.post('/posts', checkAuth, postCreateValidation, createPost);
-app.delete('/posts/:id', checkAuth, removePost);
-app.patch('/posts/:id', checkAuth, updatePost);
+app.get('/posts', PostController.getAll);
+app.get('/posts/:id', PostController.getOne);
+app.post('/posts', checkAuth, postCreateValidation, handleValidationErrors, PostController.create);
+app.delete('/posts/:id', checkAuth, PostController.remove);
+app.patch(
+  '/posts/:id',
+  checkAuth,
+  postCreateValidation,
+  handleValidationErrors,
+  PostController.update
+);
 
 app.listen(PORT, () => {
   console.log('Server OK');

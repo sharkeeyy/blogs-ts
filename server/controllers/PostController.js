@@ -34,7 +34,7 @@ export const getOne = async (req, res) => {
   }
 };
 
-export const createPost = async (req, res) => {
+export const create = async (req, res) => {
   try {
     const { title, text, imageUrl, tags } = req.body;
     const { userId } = req;
@@ -55,7 +55,7 @@ export const createPost = async (req, res) => {
   }
 };
 
-export const removePost = async (req, res) => {
+export const remove = async (req, res) => {
   try {
     const postId = req.params.id;
 
@@ -72,7 +72,7 @@ export const removePost = async (req, res) => {
   }
 };
 
-export const updatePost = async (req, res) => {
+export const update = async (req, res) => {
   try {
     const postId = req.params.id;
     const { title, text, imageUrl, tags } = req.body;
