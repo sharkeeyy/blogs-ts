@@ -6,6 +6,16 @@ export const fetchUserData = createAsyncThunk('auth/fetchUserData', async (param
   return data;
 });
 
+export const fetchRegister = createAsyncThunk('auth/fetchRegister', async (params) => {
+  const { data } = await axios.post('/auth/register', params);
+  return data;
+});
+
+export const fetchAuth = createAsyncThunk('auth/fetchAuth', async () => {
+  const { data } = await axios.get('/auth/me');
+  return data;
+});
+
 const initialState = {
   data: null,
   status: 'loading',
@@ -14,7 +24,11 @@ const initialState = {
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  reducers: {},
+  reducers: {
+    logout: (state) => {
+      state.data = null;
+    },
+  },
   extraReducers: {
     [fetchUserData.pending]: (state) => {
       state.data = null;
@@ -28,9 +42,35 @@ const authSlice = createSlice({
       state.data = null;
       state.status = 'error';
     },
+    [fetchAuth.pending]: (state) => {
+      state.data = null;
+      state.status = 'loading';
+    },
+    [fetchAuth.fulfilled]: (state, action) => {
+      state.data = action.payload;
+      state.status = 'done';
+    },
+    [fetchAuth.rejected]: (state) => {
+      state.data = null;
+      state.status = 'error';
+    },
+    [fetchRegister.pending]: (state) => {
+      state.data = null;
+      state.status = 'loading';
+    },
+    [fetchRegister.fulfilled]: (state, action) => {
+      state.data = action.payload;
+      state.status = 'done';
+    },
+    [fetchRegister.rejected]: (state) => {
+      state.data = null;
+      state.status = 'error';
+    },
   },
 });
 
 export const selectIsAuth = (state) => Boolean(state.auth.data);
 
 export const authReducer = authSlice.reducer;
+
+export const { logout } = authSlice.actions;

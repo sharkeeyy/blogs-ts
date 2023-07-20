@@ -28,8 +28,14 @@ export const Login = () => {
     mode: 'onSubmit',
   });
 
-  const onSubmit = (values) => {
-    dispatch(fetchUserData(values));
+  const onSubmit = async (values) => {
+    const data = await dispatch(fetchUserData(values));
+
+    if (data?.payload?.token) {
+      window.localStorage.setItem('token', data.payload.token);
+    } else {
+      alert('Не удалось авторизоваться!');
+    }
   };
 
   if (isAuth) {
