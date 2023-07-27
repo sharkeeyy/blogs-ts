@@ -21,19 +21,23 @@ export const AddPost = () => {
   const [tags, setTags] = React.useState('');
   const [imageUrl, setImageUrl] = React.useState('');
   const inputFileRef = React.useRef();
-
   const isEditing = Boolean(id);
+
+  if (!isAuth) {
+    navigate('/');
+  }
 
   React.useEffect(() => {
     if (id) {
-      axios.get(`/posts/${id}`)
-      .then((res) => res.data)
-      .then((data) => {
-        setTitle(data.title);
-        setText(data.text);
-        setTags(data.tags.join(', '));
-        setImageUrl(data.imageUrl);
-      });
+      axios
+        .get(`/posts/${id}`)
+        .then((res) => res.data)
+        .then((data) => {
+          setTitle(data.title);
+          setText(data.text);
+          setTags(data.tags.join(', '));
+          setImageUrl(data.imageUrl);
+        });
     }
   }, []);
 
@@ -57,7 +61,7 @@ export const AddPost = () => {
     setText(value);
   }, []);
 
-  const onSubmit = async () => {
+  const onPublic = async () => {
     try {
       setLoading(true);
 
@@ -65,7 +69,7 @@ export const AddPost = () => {
         title,
         imageUrl,
         tags,
-        text
+        text,
       };
 
       const { data } = await axios.post('posts', fields);
@@ -76,7 +80,26 @@ export const AddPost = () => {
     } catch (err) {
       console.log(err);
     }
-  }
+  };
+
+  const onSave = async () => {
+    try {
+      setLoading(true);
+
+      const fields = {
+        title,
+        imageUrl,
+        tags,
+        text,
+      };
+
+      await axios.patch(`/posts/${id}`, fields);
+
+      navigate(`/posts/${id}`);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const options = React.useMemo(
     () => ({
@@ -92,10 +115,6 @@ export const AddPost = () => {
     }),
     []
   );
-
-  if (!isAuth) {
-    navigate('/');
-  }
 
   return (
     <Paper style={{ padding: 30 }}>
@@ -131,7 +150,7 @@ export const AddPost = () => {
       />
       <SimpleMDE className={styles.editor} value={text} onChange={onChange} options={options} />
       <div className={styles.buttons}>
-        <Button onClick={onSubmit} size="large" variant="contained">
+        <Button onClick={isEditing ? onSave : onPublic} size="large" variant="contained">
           {isEditing ? 'Сохранить' : 'Опубликовать'}
         </Button>
         <a href="/">
