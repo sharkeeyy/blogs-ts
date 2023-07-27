@@ -6,6 +6,10 @@ export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
   return data;
 });
 
+export const fetchRemovePost = createAsyncThunk('posts/fetchRemovePost', async (id) => {
+  const { data } = await axios.delete(`/posts/${id}`);
+});
+
 export const fetchTags = createAsyncThunk('posts/fetchTags', async () => {
   const { data } = await axios.get('/posts/tags');
   return data;
@@ -37,6 +41,10 @@ const postsSlice = createSlice({
     [fetchPosts.rejected]: (state) => {
       state.posts.items = [];
       state.posts.status = 'error';
+    },
+    [fetchRemovePost.pending]: (state, action) => {
+      console.log(action.payload);
+      state.posts.items = state.posts.items.filter((post) => post._id !== action.meta.arg);
     },
     [fetchTags.pending]: (state) => {
       state.tags.status = 'loading';

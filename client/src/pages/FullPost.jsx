@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 import { Post } from '../components/Post';
 import { Index } from '../components/AddComment';
@@ -31,20 +32,15 @@ export const FullPost = () => {
       <Post
         id={post._id}
         title={post.title}
-        imageUrl={post.imageUrl}
+        imageUrl={`http://localhost:4000${post.imageUrl}`}
         user={post.user}
         createdAt={post.createdAt}
         viewsCount={post.viewsCount}
         commentsCount={3}
-        tags={['react', 'fun', 'typescript']}
+        tags={post.tags}
         isFullPost
       >
-        <p>
-          Hey there! 👋 I'm starting a new series called "Roast the Code", where I will share some
-          code, and let YOU roast and improve it. There's not much more to it, just be polite and
-          constructive, this is an exercise so we can all learn together. Now then, head over to the
-          repo and roast as hard as you can!!
-        </p>
+        <ReactMarkdown children={post.text} />
       </Post>
       <CommentsBlock
         items={[

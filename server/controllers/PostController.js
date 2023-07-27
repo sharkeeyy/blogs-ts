@@ -41,7 +41,7 @@ export const getOne = async (req, res) => {
       {
         returnDocument: 'after',
       }
-    );
+    ).populate('user');
 
     res.json(post);
   } catch (err) {
@@ -58,7 +58,7 @@ export const create = async (req, res) => {
       title,
       text,
       imageUrl,
-      tags,
+      tags: tags.split(','),
       user: userId,
     });
 
